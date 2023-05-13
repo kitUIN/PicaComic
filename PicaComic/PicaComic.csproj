@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>PicaComic</RootNamespace>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+  </PropertyGroup>
+
+  <ItemGroup>
+      <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221109.1" />
+      <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
+      <PackageReference Include="Serilog" Version="2.12.0" />
+      <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Remove="WebServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="WebServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="WebServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="WebServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PRIResource Remove="WebServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Remove="WebServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="WebServices\**" />
+  </ItemGroup>
+</Project>

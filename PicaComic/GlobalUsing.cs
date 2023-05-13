@@ -1,0 +1,17 @@
+﻿global using Serilog;
+global using System.Security.Cryptography;
+global using System.Text;
+global using System.Text.Json;
+global using System;
+global using System.Net;
+global using System.Net.Http;
+global using System.Collections.Generic;
+global using System.Threading.Tasks;
+global using System.Text.Json.Serialization;
+global using System.Web;
+global using PicaComic.Responses;
+global using PicaComic.Datas;
+global using PicaComic.Exceptions;
+global using PicaComic.Helpers;
+global using PicaComic.Models;
+global using PicaComic.Utils;
