@@ -370,6 +370,25 @@ namespace PicaComic
 
             return await GetAsync<CategoryResponse>($"comics?page={page}&c={HttpUtility.UrlEncode(c)}&s={s}");
         }
+        /// <summary>
+        /// 随机本子接口
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<CategoryResponse> ComicRandom()
+        {
+
+            return await GetAsync<CategoryResponse>($"comics/random");
+        }
+        
+        /// <summary>
+        /// 神魔推荐
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<CategoryResponse> ComicCollections()
+        {
+
+            return await GetAsync<CategoryResponse>($"collections");
+        }
         
         /// <summary>
         /// 获取漫画详细信息 接口
@@ -514,6 +533,16 @@ namespace PicaComic
                 {"keyword", keyword},
                 {"sort", s.ToString() },
             });
+        }
+        /// <summary>
+        /// 获取评论的评论 接口
+        /// </summary>
+        /// <param name="commentId">评论ID</param>
+        /// <param name="page">第几页</param>
+        /// <returns></returns>
+        public static async Task<CommentResponse> CommentChildren(string commentId, int page)
+        {
+            return await GetAsync<CommentResponse>($"comments/{commentId}/childrens?page={page}");
         }
 
     }

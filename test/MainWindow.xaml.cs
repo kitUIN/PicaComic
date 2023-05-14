@@ -40,8 +40,10 @@ namespace test
             PicaClient.SetToken(@"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YTk5NzAyYzExYTMxNjRiNzdlMWNmNDYiLCJlbWFpbCI6Imt1bHVqdW4iLCJyb2xlIjoibWVtYmVyIiwibmFtZSI6Iuaer-mcsuWQmyIsInZlcnNpb24iOiIyLjIuMS4zLjMuNCIsImJ1aWxkVmVyc2lvbiI6IjQ1IiwicGxhdGZvcm0iOiJhbmRyb2lkIiwiaWF0IjoxNjg0MDY1NDI4LCJleHAiOjE2ODQ2NzAyMjh9.dZyZ91Ks_TmB2XM4tKLt0RJ_QN1U9N1a_XtBS4OGR6k");
             // await PicaClient.SignIn("kulujun", "bala1234/");
             // await PicaClient.Recommendation("63b19f7b7b16a36d00ebc892");
-            await PicaClient.AdvancedSearch("","ÕýÌ«",1);
-             
+            // await PicaClient.AdvancedSearch("","ÕýÌ«",1);
+            await PicaClient.CommentChildren("62be7f6d5bf79a9f6917e24a", 1);
+            await PicaClient.ComicRandom();
+            await PicaClient.ComicCollections();
             // await PicaClient.TestPut();
             // await PicaClient.Profile();
             // await PicaClient.TestPost();
