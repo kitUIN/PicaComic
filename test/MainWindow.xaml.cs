@@ -36,14 +36,15 @@ namespace test
         private async void myButton_Click(object sender, RoutedEventArgs e)
         {
             myButton.Content = "Clicked";
-            PicaClient.SetProxy(new Uri("http://127.0.0.1:10809"));
-            await PicaClient.SignIn("kulujun", "bala1234");
-            await PicaClient.Keywords();
-            await PicaClient.Categories();
-            await PicaClient.Category(1, "½û•øÄ¿ä›");
-            await PicaClient.ComicInfo("63b19f7b7b16a36d00ebc892");
-            await PicaClient.Episodes("63b19f7b7b16a36d00ebc892", 1);
-            await PicaClient.Pictures("63b19f7b7b16a36d00ebc892", 1, 1);
+            // PicaClient.SetProxy(new Uri("http://127.0.0.1:10809"));
+            PicaClient.SetToken(@"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YTk5NzAyYzExYTMxNjRiNzdlMWNmNDYiLCJlbWFpbCI6Imt1bHVqdW4iLCJyb2xlIjoibWVtYmVyIiwibmFtZSI6Iuaer-mcsuWQmyIsInZlcnNpb24iOiIyLjIuMS4zLjMuNCIsImJ1aWxkVmVyc2lvbiI6IjQ1IiwicGxhdGZvcm0iOiJhbmRyb2lkIiwiaWF0IjoxNjg0MDY1NDI4LCJleHAiOjE2ODQ2NzAyMjh9.dZyZ91Ks_TmB2XM4tKLt0RJ_QN1U9N1a_XtBS4OGR6k");
+            // await PicaClient.SignIn("kulujun", "bala1234/");
+            // await PicaClient.Recommendation("63b19f7b7b16a36d00ebc892");
+            await PicaClient.AdvancedSearch("","ÕýÌ«",1);
+             
+            // await PicaClient.TestPut();
+            // await PicaClient.Profile();
+            // await PicaClient.TestPost();
         }
     }
 }

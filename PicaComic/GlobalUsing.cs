@@ -12,6 +12,6 @@ global using System.Web;
 global using PicaComic.Responses;
 global using PicaComic.Datas;
 global using PicaComic.Exceptions;
-global using PicaComic.Helpers;
+global using PicaComic.Extensions;
 global using PicaComic.Models;
 global using PicaComic.Utils;
