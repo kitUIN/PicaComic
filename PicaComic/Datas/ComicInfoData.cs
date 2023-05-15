@@ -1,4 +1,4 @@
-﻿namespace BikaSharpAPI.DataModels
+﻿namespace PicaComic.Datas
 {
     public class ComicInfoData
     {

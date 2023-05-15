@@ -1,5 +1,7 @@
 ﻿using Microsoft.UI.Xaml.Controls;
+using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using Windows.Storage;
 
 namespace PicaComic
@@ -115,13 +117,15 @@ namespace PicaComic
         /// <returns></returns>
         private static HttpRequestMessage CreateRequestMessage(HttpMethod method, string api)
         {
+
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(method, BaseUrl + api);
+             
+
 
             foreach (KeyValuePair<string, string> header in GetHeader(api, method.ToString()))
             {
                 httpRequestMessage.Headers.Add(header.Key, header.Value);
             }
-
             return httpRequestMessage;
         }
 
@@ -198,14 +202,19 @@ namespace PicaComic
         /// <returns></returns>
         private static async Task<T> PostAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
         {
+            string data = JsonSerializer.Serialize(payload);
+            return await PostAsync<T>(api, data);
+        }
+        private static async Task<T> PostAsync<T>(string api, string data) where T : PicaResponse
+        {
             using (var request = CreateRequestMessage(HttpMethod.Post, api))
             {
-                string data = JsonSerializer.Serialize(payload);
                 request.Content = new StringContent(data, Encoding.UTF8, "application/json");
                 request.Content.Headers.Remove("Content-Type");
                 request.Content.Headers.Add("Content-Type", "application/json; charset=UTF-8");
                 using (var response = await _client.SendAsync(request))
                 {
+                    Debug.WriteLine(response.Version);
                     string resp = await response.Content.ReadAsStringAsync();
                     Log.Information("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api, _proxy != null ? _proxy.Address : "null", data, resp);
                     T res = JsonSerializer.Deserialize<T>(resp);
@@ -266,7 +275,7 @@ namespace PicaComic
         }
 
         /// <summary>
-        /// 设置代理
+        /// 设置代理,仅支持'http', 'socks4', 'socks4a'= 'socks5'
         /// </summary>
         /// <param name="proxy">Proxy Address</param>
         public static void SetProxy(Uri proxy)
@@ -282,6 +291,7 @@ namespace PicaComic
                 Proxy = _proxy,
                 UseProxy = true
             };
+ 
             _client = new HttpClient(innerHandler);
         }
         /// <summary>
@@ -525,15 +535,23 @@ namespace PicaComic
         /// <param name="page">第几页</param>
         /// <param name="s">排序<see cref="SortRule"/></param>
         /// <returns></returns>
-        public static async Task<CategoryResponse> AdvancedSearch(string categories,string keyword, int page, SortRule s = SortRule.dd)
+        public static async Task<CategoryResponse> AdvancedSearch(string keyword, int page, SortRule s = SortRule.dd, List<string> categories=null)
         {
-            return await PostAsync<CategoryResponse>($"comics/advanced-search?page={page}",new Dictionary<string, string>
+            SearchData data = new SearchData
             {
-                {"categories" , categories },
-                {"keyword", keyword},
-                {"sort", s.ToString() },
-            });
+                Sort = s.ToString(),
+                Keyword = keyword,
+                Categories = categories,
+            };
+            JsonSerializerOptions options = new()
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            };
+            return await PostAsync<CategoryResponse>($"comics/advanced-search?page={page}",
+                JsonSerializer.Serialize(data, options));
         }
+
         /// <summary>
         /// 获取评论的评论 接口
         /// </summary>
