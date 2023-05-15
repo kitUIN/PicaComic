@@ -202,8 +202,11 @@ namespace PicaComic
         /// <returns></returns>
         private static async Task<T> PostAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
         {
-            string data = JsonSerializer.Serialize(payload);
-            return await PostAsync<T>(api, data);
+            return await PostAsync<T>(api, JsonSerializer.Serialize(payload));
+        }
+        private static async Task<T> PostAsync<T>(string api) where T : PicaResponse
+        {
+            return await PostAsync<T>(api, JsonSerializer.Serialize(new Dictionary<string, string>()));
         }
         private static async Task<T> PostAsync<T>(string api, string data) where T : PicaResponse
         {
@@ -214,7 +217,6 @@ namespace PicaComic
                 request.Content.Headers.Add("Content-Type", "application/json; charset=UTF-8");
                 using (var response = await _client.SendAsync(request))
                 {
-                    Debug.WriteLine(response.Version);
                     string resp = await response.Content.ReadAsStringAsync();
                     Log.Information("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api, _proxy != null ? _proxy.Address : "null", data, resp);
                     T res = JsonSerializer.Deserialize<T>(resp);
@@ -497,7 +499,7 @@ namespace PicaComic
         /// <returns></returns>
         public static async Task<PunchInResponse> PunchIn()
         {
-            return await PostAsync<PunchInResponse>("users/punch-in",new Dictionary<string, string>());
+            return await PostAsync<PunchInResponse>("users/punch-in");
         }
         /// <summary>
         /// 个人收藏 接口
@@ -516,7 +518,7 @@ namespace PicaComic
         /// <returns></returns>
         public static async Task<ActionResponse> ComicFavourite(string comicId)
         {
-            return await PostAsync<ActionResponse>($"comics/{comicId}/favourite",new Dictionary<string, string>());
+            return await PostAsync<ActionResponse>($"comics/{comicId}/favourite");
         }
         /// <summary>
         /// 给漫画加爱心 接口
@@ -525,7 +527,7 @@ namespace PicaComic
         /// <returns></returns>
         public static async Task<ActionResponse> ComicLike(string comicId)
         {
-            return await PostAsync<ActionResponse>($"comics/{comicId}/like",new Dictionary<string, string>());
+            return await PostAsync<ActionResponse>($"comics/{comicId}/like");
         }
         /// <summary>
         /// 高级搜索 接口
@@ -562,6 +564,40 @@ namespace PicaComic
         {
             return await GetAsync<CommentResponse>($"comments/{commentId}/childrens?page={page}");
         }
-
+        /// <summary>
+        /// 喜欢一个评论 接口
+        /// </summary>
+        /// <param name="commentId">评论ID</param>
+        /// <returns></returns>
+        public static async Task<ActionResponse> CommentLike(string commentId)
+        {
+            return await PostAsync<ActionResponse>($"comments/{commentId}/like");
+        }
+        /// <summary>
+        /// 发送漫画评论 接口
+        /// </summary>
+        /// <param name="comicId">漫画ID</param>
+        /// <param name="message">评论</param>
+        /// <returns></returns>
+        public static async Task<PicaResponse> SendComicComment(string comicId,string message)
+        {
+            return await PostAsync<PicaResponse>($"comics/{comicId}/comments",new Dictionary<string, string>
+            {
+                {"content", message },
+            });
+        }
+        /// <summary>
+        /// 发送子评论 接口
+        /// </summary>
+        /// <param name="commentId">评论ID</param>
+        /// <param name="message">评论</param>
+        /// <returns></returns>
+        public static async Task<PicaResponse> SendCommentChildren(string commentId, string message)
+        {
+            return await PostAsync<PicaResponse>($"comments/{commentId}", new Dictionary<string, string>
+            {
+                {"content", message },
+            });
+        }
     }
 }
