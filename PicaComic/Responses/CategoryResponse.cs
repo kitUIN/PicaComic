@@ -3,6 +3,6 @@
     public class CategoryResponse : PicaResponse
     {
         [JsonPropertyName("data")]
-        public ComicList Data { get; set; }
+        public CategoryComicListData Data { get; set; }
     }
 }

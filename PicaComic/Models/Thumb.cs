@@ -1,5 +1,8 @@
 ﻿namespace PicaComic.Models
 {
+    /// <summary>
+    /// 缩略图
+    /// </summary>
     public class Thumb
     {
         [JsonPropertyName("originalName")]

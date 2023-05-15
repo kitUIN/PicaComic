@@ -1,9 +1,27 @@
 ﻿namespace PicaComic.Models
 {
+    /// <summary>
+    /// 漫画详细信息
+    /// </summary>
+    /// <seealso cref="PicaComic.Models.Comic" />
     public class ComicInfo: Comic
     {
+        [JsonPropertyName("pagesCount")]
+        public int PagesCount { get; set; }
+
+        [JsonPropertyName("epsCount")]
+        public int EpsCount { get; set; }
+        [JsonPropertyName("totalLikes")]
+        public int TotalLikes { get; set; }
+
+        [JsonPropertyName("totalViews")]
+        public int TotalViews { get; set; }
+
+        [JsonPropertyName("likesCount")]
+        public int LikesCount { get; set; }
+
         [JsonPropertyName("_creator")]
-        public Profile Creator { get; set; }
+        public Creater Creator { get; set; }
 
         [JsonPropertyName("description")]
         public string Description { get; set; }
@@ -28,6 +46,9 @@
 
         [JsonPropertyName("totalComments")]
         public int TotalComments { get; set; }
+
+        [JsonPropertyName("likesCount")]
+        public int LikesCount { get; set; }
 
         [JsonPropertyName("viewsCount")]
         public int ViewsCount { get; set; }

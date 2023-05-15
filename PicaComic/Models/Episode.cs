@@ -1,6 +1,9 @@
 ﻿
 namespace PicaComic.Models
 {
+    /// <summary>
+    /// 漫画-话
+    /// </summary>
     public class Episode
     {
         [JsonPropertyName("_id")]

@@ -1,5 +1,8 @@
 ﻿namespace PicaComic.Models
 {
+    /// <summary>
+    /// 评论
+    /// </summary>
     public class Comment
     {
         [JsonPropertyName("_id")]
@@ -9,7 +12,7 @@
         public string Content { get; set; }
 
         [JsonPropertyName("_user")]
-        public Profile User { get; set; }
+        public Commenter User { get; set; }
 
         [JsonPropertyName("_comic")]
         public string Comic { get; set; }

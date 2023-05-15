@@ -1,5 +1,8 @@
 ﻿namespace PicaComic.Models
 {
+    /// <summary>
+    /// 分类
+    /// </summary>
     public class Category
     {
         [JsonPropertyName("_id")]

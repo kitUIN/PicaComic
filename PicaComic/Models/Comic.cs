@@ -1,5 +1,8 @@
 ﻿namespace PicaComic.Models
 {
+    /// <summary>
+    /// 漫画
+    /// </summary>
     public class Comic
     {
         [JsonPropertyName("_id")]
@@ -11,12 +14,6 @@
         [JsonPropertyName("author")]
         public string Author { get; set; }
 
-        [JsonPropertyName("pagesCount")]
-        public int PagesCount { get; set; }
-
-        [JsonPropertyName("epsCount")]
-        public int EpsCount { get; set; }
-
         [JsonPropertyName("finished")]
         public bool Finished { get; set; }
 
@@ -25,14 +22,6 @@
 
         [JsonPropertyName("thumb")]
         public Thumb Thumb { get; set; }
-
-        [JsonPropertyName("totalLikes")]
-        public int TotalLikes { get; set; }
-
-        [JsonPropertyName("totalViews")]
-        public int TotalViews { get; set; }
-
-        [JsonPropertyName("likesCount")]
-        public int LikesCount { get; set; }
+        
     }
 }

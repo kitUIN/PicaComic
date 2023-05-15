@@ -41,8 +41,9 @@ namespace test
             // await PicaClient.SignIn("kulujun", "bala1234/");
             // await PicaClient.Recommendation("63b19f7b7b16a36d00ebc892");
             // await PicaClient.AdvancedSearch("ÕýÌ«",1);
-
-            await PicaClient.SendCommentChildren("62be7f6d5bf79a9f6917e24a","Ï²»¶");
+            await PicaClient.KnightLeaderboard();
+            await PicaClient.Leaderboard();
+            // await PicaClient.SendCommentChildren("62be7f6d5bf79a9f6917e24a","Ï²»¶");
             //await PicaClient.ComicRandom();
             //await PicaClient.ComicCollections();
             // await PicaClient.TestPut();

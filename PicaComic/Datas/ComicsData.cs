@@ -1,8 +1,8 @@
 ﻿namespace PicaComic.Datas
 {
-    public class ComicListData
+    public class CategoryComicListData
     {
         [JsonPropertyName("comics")]
-        public ComicList Comics { get; set; }
+        public CategoryComicList Comics { get; set; }
     }
 }

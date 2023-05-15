@@ -15,3 +15,5 @@ global using PicaComic.Exceptions;
 global using PicaComic.Extensions;
 global using PicaComic.Models;
 global using PicaComic.Utils;
+global using System.Net.Http;
+global using Windows.Storage;

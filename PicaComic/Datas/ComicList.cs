@@ -2,9 +2,6 @@
 {
     public class ComicList
     {
-        [JsonPropertyName("docs")]
-        public List<Comic> Docs { get; set; }
-
         [JsonPropertyName("total")]
         public int Total { get; set; }
 
