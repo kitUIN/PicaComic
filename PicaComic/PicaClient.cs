@@ -1,4 +1,6 @@
-﻿namespace PicaComic
+﻿using System.IO;
+
+namespace PicaComic
 {
     /// <summary>
     /// 哔咔漫画Http客户端
@@ -25,13 +27,14 @@
         /// <summary>
         /// 分流
         /// </summary>
-        public static int AppChannel = 3;
+        public static int AppChannel { get; set; } = 3;
 
         /// <summary>
         /// 图片分流
         /// </summary>
-        public static int FileChannel = 3;
+        public static int FileChannel { get; set; } = 3;
 
+        public static IReadOnlyList<string> FileServer = new List<string> {"https://storage1.picacomic.com/","https://s2.picacomic.com/","https://s3.picacomic.com/" };
         private const string BaseUrl = "https://picaapi.picacomic.com/";
 
         /// <summary>

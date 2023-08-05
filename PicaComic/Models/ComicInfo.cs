@@ -47,9 +47,6 @@
         [JsonPropertyName("totalComments")]
         public int TotalComments { get; set; }
 
-        [JsonPropertyName("likesCount")]
-        public int LikesCount { get; set; }
-
         [JsonPropertyName("viewsCount")]
         public int ViewsCount { get; set; }
 
