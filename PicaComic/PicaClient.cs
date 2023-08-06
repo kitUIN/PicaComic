@@ -33,8 +33,13 @@ namespace PicaComic
         /// 图片分流
         /// </summary>
         public static int FileChannel { get; set; } = 3;
-
+        /// <summary>
+        /// 图片分流服务器
+        /// </summary>
         public static IReadOnlyList<string> FileServer = new List<string> {"https://storage1.picacomic.com/","https://s2.picacomic.com/","https://s3.picacomic.com/" };
+        /// <summary>
+        /// 服务器
+        /// </summary>
         private const string BaseUrl = "https://picaapi.picacomic.com/";
 
         /// <summary>
@@ -57,6 +62,10 @@ namespace PicaComic
         /// </summary>
         private static string _nonce = Guid.NewGuid().ToString().Replace("-", string.Empty);
 
+        static PicaClient()
+        {
+            _client.Timeout = TimeSpan.FromSeconds(1);
+        }
         #endregion
 
         #region Private Http
@@ -286,13 +295,17 @@ namespace PicaComic
         {
             _token = token;
         }
-
+        /// <summary>
+        /// 是否存在登录凭证
+        /// </summary>
+        public static bool HasToken => !string.IsNullOrEmpty(_token);
         /// <summary>
         /// 重置代理
         /// </summary>
         public static void ResetProxy()
         {
             _client = new HttpClient(handler: new HttpClientHandler());
+            _client.Timeout = TimeSpan.FromSeconds(1);
         }
 
         /// <summary>
@@ -314,6 +327,7 @@ namespace PicaComic
             };
 
             _client = new HttpClient(innerHandler);
+            _client.Timeout = TimeSpan.FromSeconds(1);
         }
 
         /// <summary>
@@ -391,7 +405,6 @@ namespace PicaComic
         /// <summary>
         /// 获取所有分区 接口
         /// </summary>
-        /// <returns></returns>
         public static async Task<CategoriesResponse> Categories()
         {
             return await GetAsync<CategoriesResponse>("categories");
@@ -400,19 +413,17 @@ namespace PicaComic
         /// <summary>
         /// 获取分区内漫画 接口
         /// </summary>
+        /// <param name="category">分区名称<see cref="Category.Title"/></param>
         /// <param name="page">第几页</param>
-        /// <param name="c">分区名称<see cref="Category.Title"/></param>
         /// <param name="s">default: <see cref="SortRule.dd"/></param>
-        /// <returns><see cref="ComicsPage"/></returns>
-        public static async Task<CategoryResponse> Category(int page, string c, SortRule s = SortRule.dd)
+        public static async Task<CategoryResponse> Category(string category, int page=1, SortRule s = SortRule.dd)
         {
-            return await GetAsync<CategoryResponse>($"comics?page={page}&c={HttpUtility.UrlEncode(c)}&s={s}");
+            return await GetAsync<CategoryResponse>($"comics?page={page}&c={HttpUtility.UrlEncode(category)}&s={s}");
         }
 
         /// <summary>
         /// 随机本子接口
         /// </summary>
-        /// <returns></returns>
         public static async Task<CategoryResponse> ComicRandom()
         {
             return await GetAsync<CategoryResponse>($"comics/random");
@@ -499,7 +510,7 @@ namespace PicaComic
         /// <summary>
         /// 修改头像 接口
         /// </summary>
-        /// <param name="path">base64图片</param>
+        /// <param name="imgData">base64图片</param>
         /// <returns></returns>
         public static async Task<PicaResponse> SetAvatar(string imgData)
         {

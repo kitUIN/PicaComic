@@ -13,7 +13,7 @@
 
         [JsonPropertyName("fileServer")]
         public string FileServer { get; set; }
-
+        [JsonIgnore]
         public string FilePath => $"{PicaClient.FileServer[PicaClient.FileChannel - 1]}static/{Path}";
     }
 }
