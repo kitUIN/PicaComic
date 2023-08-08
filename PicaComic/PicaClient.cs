@@ -159,7 +159,7 @@ namespace PicaComic
                     using (HttpResponseMessage response = await _client.SendAsync(request))
                     {
                         int ms = (DateTime.Now - now).Milliseconds;
-                        Log.Information("{Message}{Ms}ms", message, ms);
+                        Log.Debug("{Message}{Ms}ms", message, ms);
                         return ms;
                     }
                 }
@@ -187,7 +187,7 @@ namespace PicaComic
                     using (var response = await _client.SendAsync(request))
                     {
                         string resp = await response.Content.ReadAsStringAsync();
-                        Log.Information("\n[Get]{Api}:\nproxy:{Proxy}\nreturn:{Resp}", api,
+                        Log.Debug("\n[Get]{Api}:\nproxy:{Proxy}\nreturn:{Resp}", api,
                             _proxy != null ? _proxy.Address : "null", resp);
                         T res = JsonSerializer.Deserialize<T>(resp);
                         if (res.Code != 200)
@@ -240,7 +240,7 @@ namespace PicaComic
                 using (var response = await _client.SendAsync(request))
                 {
                     string resp = await response.Content.ReadAsStringAsync();
-                    Log.Information("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api,
+                    Log.Debug("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api,
                         _proxy != null ? _proxy.Address : "null", data, resp);
                     T res = JsonSerializer.Deserialize<T>(resp);
                     if (res.Code != 200)
@@ -272,7 +272,7 @@ namespace PicaComic
                 using (var response = await _client.SendAsync(request))
                 {
                     string resp = await response.Content.ReadAsStringAsync();
-                    Log.Information("\n[Put]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api,
+                    Log.Debug("\n[Put]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api,
                         _proxy != null ? _proxy.Address : "null", data, resp);
                     T res = JsonSerializer.Deserialize<T>(resp);
                     if (res.Code != 200)

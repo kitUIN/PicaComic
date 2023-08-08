@@ -1,12 +1,18 @@
-﻿using Windows.Services.Maps.LocalSearch;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Windows.Services.Maps.LocalSearch;
 
 namespace PicaComic.Models
 {
     /// <summary>
     /// 漫画
     /// </summary>
-    public class Comic
+    public class Comic: ObservableObject
     {
+        #region private
+        bool isLocked;
+        string lockCategoryString;
+        List<string> lockCategories;
+        #endregion
         /// <summary>
         /// ID
         /// </summary>
@@ -47,16 +53,47 @@ namespace PicaComic.Models
         /// 是否被封印
         /// </summary>
         [JsonIgnore]
-        public bool IsLocked { get; set; } = false;
+        public bool IsLocked 
+        { 
+            get => isLocked; 
+            set
+            {
+                if(IsLocked != value)
+                {
+                    SetProperty(ref isLocked, value);
+                }
+            }
+        }
         /// <summary>
         /// 被封印的分区
         /// </summary>
         [JsonIgnore]
-        public List<string> LockCategories { get; set; } = new List<string>();
+        public List<string> LockCategories 
+        {
+            get => lockCategories;
+            set
+            {
+                if(lockCategories != value)
+                {
+                    SetProperty(ref lockCategories, value);
+                    LockCategoryString = value.ListString();
+                }
+            }
+        }
         /// <summary>
         /// 被封印的分区文字版
         /// </summary>
         [JsonIgnore]
-        public string LockCategoryString => LockCategories.ListString();
+        public string LockCategoryString 
+        { 
+            get => lockCategoryString;
+            set
+            {
+                if (LockCategoryString != value)
+                {
+                    SetProperty(ref lockCategoryString, value);
+                }
+            }
+        }
     }
 }
