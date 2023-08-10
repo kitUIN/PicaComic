@@ -1,9 +1,11 @@
-﻿namespace PicaComic.Models
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace PicaComic.Models
 {
     /// <summary>
     /// 评论
     /// </summary>
-    public class Comment
+    public partial class Comment:ObservableObject
     {
         [JsonPropertyName("_id")]
         public string Id { get; set; }
@@ -37,6 +39,8 @@
 
         [JsonPropertyName("isLiked")]
         public bool IsLiked { get; set; }
+        [ObservableProperty]
+        private int order;
     }
 
 
