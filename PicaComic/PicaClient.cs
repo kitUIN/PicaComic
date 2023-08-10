@@ -413,9 +413,9 @@ namespace PicaComic
         /// </summary>
         /// <param name="comicId">The book identifier.</param>
         /// <returns></returns>
-        public static async Task<CategoryResponse> Recommendation(string comicId)
+        public static async Task<ComicRandomResponse> Recommendation(string comicId)
         {
-            return await GetAsync<CategoryResponse>($"comics/{comicId}/recommendation");
+            return await GetAsync<ComicRandomResponse>($"comics/{comicId}/recommendation");
         }
 
         /// <summary>
@@ -434,6 +434,7 @@ namespace PicaComic
         /// <param name="s">default: <see cref="SortRule.dd"/></param>
         public static async Task<CategoryResponse> Category(string category, int page = 1, SortRule s = SortRule.dd)
         {
+            if (category == "最近更新") category = "";
             var c = string.IsNullOrEmpty(category) ? "" : $"&c={HttpUtility.UrlEncode(category)}";
             return await GetAsync<CategoryResponse>($"comics?page={page}&s={s}" + c);
         }

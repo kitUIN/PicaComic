@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace PicaComic.Responses
 {
     /// <summary>
-    /// 随机本子 返回
+    /// 随机本子,推荐本子 返回
     /// </summary>
     public class ComicRandomResponse: PicaResponse
     {

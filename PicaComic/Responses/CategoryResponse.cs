@@ -1,7 +1,7 @@
 ﻿namespace PicaComic.Responses
 {
     /// <summary>
-    /// 分区,推荐本子的返回
+    /// 分区 请求返回
     /// </summary>
     public class CategoryResponse : PicaResponse
     {

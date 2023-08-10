@@ -1,12 +1,12 @@
 ﻿namespace PicaComic.Datas
 {
     /// <summary>
-    /// CategoryComicList
+    /// $.data.comics
     /// </summary>
     public class CategoryComicList: ComicList
     {
         /// <summary>
-        /// $.docs
+        /// $.data.comics.docs
         /// </summary>
         [JsonPropertyName("docs")]
         public List<CategoryComic> Docs { get; set; }
