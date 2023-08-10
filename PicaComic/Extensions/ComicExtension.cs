@@ -10,6 +10,7 @@
         /// </summary>
         public static string ListString(this List<string> s)
         {
+            s ??= new List<string>();
             return string.Join(" ", s);
         }
     }

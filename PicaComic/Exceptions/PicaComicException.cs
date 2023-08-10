@@ -1,5 +1,8 @@
 ﻿namespace PicaComic.Exceptions
 {
+    /// <summary>
+    /// 请求错误
+    /// </summary>
     public class PicaComicException: Exception
     {
         public int PicaCode { get; set; }

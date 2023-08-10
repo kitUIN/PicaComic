@@ -23,24 +23,14 @@
         /// <summary>
         /// 自定义路径
         /// </summary>
-        private string _path;
+        private readonly string path;
         /// <summary>
         /// 图片地址
         /// </summary>
         [JsonIgnore]
         public string FilePath { 
-            get 
-            {
-                if (string.IsNullOrEmpty(_path))
-                {
-                    return $"{PicaClient.FileServer[PicaClient.FileChannel - 1]}static/{Path}";
-                }
-                return _path;
-            } 
-            set 
-            {
-                _path=value;
-            } 
+            get => string.IsNullOrEmpty(path) ? $"{PicaClient.FileServer[PicaClient.FileChannel - 1]}static/{Path}" : path;
+            init => path=value;
         }
     }
 }

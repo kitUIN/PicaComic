@@ -9,9 +9,9 @@ namespace PicaComic.Models
     public class Comic: ObservableObject
     {
         #region private
-        bool isLocked;
-        string lockCategoryString;
-        List<string> lockCategories;
+        private bool isLocked;
+        private string lockCategoryString;
+        private List<string> lockCategories;
         #endregion
         /// <summary>
         /// ID
@@ -73,11 +73,9 @@ namespace PicaComic.Models
             get => lockCategories;
             set
             {
-                if(lockCategories != value)
-                {
-                    SetProperty(ref lockCategories, value);
-                    LockCategoryString = value.ListString();
-                }
+                if (lockCategories == value) return;
+                SetProperty(ref lockCategories, value);
+                LockCategoryString = value.ListString();
             }
         }
         /// <summary>

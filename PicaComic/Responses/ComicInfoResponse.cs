@@ -1,8 +1,14 @@
 ﻿namespace PicaComic.Responses
 {
-    public class ComicInfoResponse:PicaResponse
+    /// <summary>
+    /// 漫画信息请求返回
+    /// </summary>
+    public class ComicInfoResponse: PicaResponse
     {
+        /// <summary>
+        /// $.data
+        /// </summary>
         [JsonPropertyName("data")]
-        public ComicInfo Data { get; set; }
+        public ComicInfoData Data { get; set; }
     }
 }

@@ -10,6 +10,11 @@ namespace PicaComic
         #region Fields
 
         /// <summary>
+        /// 超时
+        /// </summary>
+        private static double Timeout { get; set; } = 3;
+
+        /// <summary>
         /// HttpClient实例
         /// </summary>
         private static HttpClient _client = new HttpClient(new HttpClientHandler());
@@ -33,10 +38,13 @@ namespace PicaComic
         /// 图片分流
         /// </summary>
         public static int FileChannel { get; set; } = 3;
+
         /// <summary>
         /// 图片分流服务器
         /// </summary>
-        public static IReadOnlyList<string> FileServer = new List<string> {"https://storage1.picacomic.com/","https://s2.picacomic.com/","https://s3.picacomic.com/" };
+        public static IReadOnlyList<string> FileServer = new List<string>
+            { "https://storage1.picacomic.com/", "https://s2.picacomic.com/", "https://s3.picacomic.com/" };
+
         /// <summary>
         /// 服务器
         /// </summary>
@@ -64,8 +72,9 @@ namespace PicaComic
 
         static PicaClient()
         {
-            _client.Timeout = TimeSpan.FromSeconds(1);
+            SetTimeout(Timeout);
         }
+
         #endregion
 
         #region Private Http
@@ -130,7 +139,6 @@ namespace PicaComic
         {
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(method, BaseUrl + api);
 
-
             foreach (KeyValuePair<string, string> header in GetHeader(api, method.ToString()))
             {
                 httpRequestMessage.Headers.Add(header.Key, header.Value);
@@ -150,23 +158,19 @@ namespace PicaComic
         /// <returns>所需要的时间(单位ms)</returns>
         private static async Task<int> HeadAsync(string url)
         {
-            string message = $"连接测试[proxy:{(_proxy != null ? _proxy.Address : "null")}]{url}: -> ";
+            var message = $"连接测试[proxy:{(_proxy != null ? _proxy.Address : "null")}]{url}: -> ";
             try
             {
-                using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url))
-                {
-                    DateTime now = DateTime.Now;
-                    using (HttpResponseMessage response = await _client.SendAsync(request))
-                    {
-                        int ms = (DateTime.Now - now).Milliseconds;
-                        Log.Debug("{Message}{Ms}ms", message, ms);
-                        return ms;
-                    }
-                }
+                using var request = new HttpRequestMessage(HttpMethod.Head, url);
+                var now = DateTime.Now;
+                using var response = await _client.SendAsync(request);
+                var ms = (DateTime.Now - now).Milliseconds;
+                Log.Debug("{Message}{Ms}ms", message, ms);
+                return ms;
             }
-            catch (HttpRequestException ex)
+            catch (Exception exception)
             {
-                Log.Error("{Message} time out", message, ex);
+                Log.Error("Get Exception: {Ex}", exception);
                 throw;
             }
         }
@@ -182,26 +186,22 @@ namespace PicaComic
         {
             try
             {
-                using (var request = CreateRequestMessage(HttpMethod.Get, api))
+                using var request = CreateRequestMessage(HttpMethod.Get, api);
+                using var response = await _client.SendAsync(request);
+                var resp = await response.Content.ReadAsStringAsync();
+                Log.Debug("\n[Get]{Api}:\nproxy:{Proxy}\nreturn:{Resp}", api,
+                    _proxy != null ? _proxy.Address : "null", resp);
+                var res = JsonSerializer.Deserialize<T>(resp);
+                if (res.Code != 200)
                 {
-                    using (var response = await _client.SendAsync(request))
-                    {
-                        string resp = await response.Content.ReadAsStringAsync();
-                        Log.Debug("\n[Get]{Api}:\nproxy:{Proxy}\nreturn:{Resp}", api,
-                            _proxy != null ? _proxy.Address : "null", resp);
-                        T res = JsonSerializer.Deserialize<T>(resp);
-                        if (res.Code != 200)
-                        {
-                            throw new PicaComicException(res);
-                        }
-
-                        return res;
-                    }
+                    throw new PicaComicException(res);
                 }
+
+                return res;
             }
-            catch (HttpRequestException ex)
+            catch (Exception exception)
             {
-                Log.Error("  ", ex);
+                Log.Error("Get Exception: {Ex}", exception);
                 throw;
             }
         }
@@ -232,24 +232,27 @@ namespace PicaComic
 
         private static async Task<T> PostAsync<T>(string api, string data) where T : PicaResponse
         {
-            using (var request = CreateRequestMessage(HttpMethod.Post, api))
+            try
             {
+                using var request = CreateRequestMessage(HttpMethod.Post, api);
                 request.Content = new StringContent(data, Encoding.UTF8, "application/json");
                 request.Content.Headers.Remove("Content-Type");
                 request.Content.Headers.Add("Content-Type", "application/json; charset=UTF-8");
-                using (var response = await _client.SendAsync(request))
+                using var response = await _client.SendAsync(request);
+                var resp = await response.Content.ReadAsStringAsync();
+                Log.Debug("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{Data}\nreturn:{Resp}", api,
+                    _proxy != null ? _proxy.Address : "null", data, resp);
+                var res = JsonSerializer.Deserialize<T>(resp);
+                if (res.Code != 200)
                 {
-                    string resp = await response.Content.ReadAsStringAsync();
-                    Log.Debug("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api,
-                        _proxy != null ? _proxy.Address : "null", data, resp);
-                    T res = JsonSerializer.Deserialize<T>(resp);
-                    if (res.Code != 200)
-                    {
-                        throw new PicaComicException(res);
-                    }
-
-                    return res;
+                    throw new PicaComicException(res);
                 }
+                return res;
+            }
+            catch (Exception exception)
+            {
+                Log.Error("Get Exception: {Ex}", exception);
+                throw;
             }
         }
 
@@ -263,25 +266,28 @@ namespace PicaComic
         /// <returns></returns>
         private static async Task<T> PutAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
         {
-            using (var request = CreateRequestMessage(HttpMethod.Put, api))
+            try
             {
-                string data = JsonSerializer.Serialize(payload);
+                using var request = CreateRequestMessage(HttpMethod.Put, api);
+                var data = JsonSerializer.Serialize(payload);
                 request.Content = new StringContent(data, Encoding.UTF8, "application/json");
                 request.Content.Headers.Remove("Content-Type");
                 request.Content.Headers.Add("Content-Type", "application/json; charset=UTF-8");
-                using (var response = await _client.SendAsync(request))
+                using var response = await _client.SendAsync(request);
+                var resp = await response.Content.ReadAsStringAsync();
+                Log.Debug("\n[Put]{Api}:\nproxy:{Proxy}\npayload:{Data}\nreturn:{Resp}", api,
+                    _proxy != null ? _proxy.Address : "null", data, resp);
+                var res = JsonSerializer.Deserialize<T>(resp);
+                if (res.Code != 200)
                 {
-                    string resp = await response.Content.ReadAsStringAsync();
-                    Log.Debug("\n[Put]{Api}:\nproxy:{Proxy}\npayload:{data}\nreturn:{Resp}", api,
-                        _proxy != null ? _proxy.Address : "null", data, resp);
-                    T res = JsonSerializer.Deserialize<T>(resp);
-                    if (res.Code != 200)
-                    {
-                        throw new PicaComicException(res);
-                    }
-
-                    return res;
+                    throw new PicaComicException(res);
                 }
+                return res;
+            }
+            catch (Exception exception)
+            {
+                Log.Error("Get Exception: {Ex}", exception);
+                throw;
             }
         }
 
@@ -295,17 +301,27 @@ namespace PicaComic
         {
             _token = token;
         }
+
         /// <summary>
         /// 是否存在登录凭证
         /// </summary>
         public static bool HasToken => !string.IsNullOrEmpty(_token);
+
         /// <summary>
         /// 重置代理
         /// </summary>
         public static void ResetProxy()
         {
             _client = new HttpClient(handler: new HttpClientHandler());
-            _client.Timeout = TimeSpan.FromSeconds(1);
+        }
+
+        /// <summary>
+        /// 设置超时时间
+        /// </summary>
+        public static void SetTimeout(double timeout)
+        {
+            Timeout = timeout;
+            _client.Timeout = TimeSpan.FromSeconds(timeout);
         }
 
         /// <summary>
@@ -327,7 +343,7 @@ namespace PicaComic
             };
 
             _client = new HttpClient(innerHandler);
-            _client.Timeout = TimeSpan.FromSeconds(1);
+            SetTimeout(Timeout);
         }
 
         /// <summary>
@@ -416,17 +432,18 @@ namespace PicaComic
         /// <param name="category">分区名称<see cref="Category.Title"/></param>
         /// <param name="page">第几页</param>
         /// <param name="s">default: <see cref="SortRule.dd"/></param>
-        public static async Task<CategoryResponse> Category(string category, int page=1, SortRule s = SortRule.dd)
+        public static async Task<CategoryResponse> Category(string category, int page = 1, SortRule s = SortRule.dd)
         {
-            return await GetAsync<CategoryResponse>($"comics?page={page}&c={HttpUtility.UrlEncode(category)}&s={s}");
+            var c = string.IsNullOrEmpty(category) ? "" : $"&c={HttpUtility.UrlEncode(category)}";
+            return await GetAsync<CategoryResponse>($"comics?page={page}&s={s}" + c);
         }
 
         /// <summary>
         /// 随机本子接口
         /// </summary>
-        public static async Task<CategoryResponse> ComicRandom()
+        public static async Task<ComicRandomResponse> ComicRandom()
         {
-            return await GetAsync<CategoryResponse>($"comics/random");
+            return await GetAsync<ComicRandomResponse>($"comics/random");
         }
 
         /// <summary>
