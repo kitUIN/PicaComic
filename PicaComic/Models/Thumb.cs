@@ -29,7 +29,7 @@
         /// </summary>
         [JsonIgnore]
         public string FilePath { 
-            get => string.IsNullOrEmpty(path) ? $"{PicaClient.FileServer[PicaClient.FileChannel - 1]}static/{Path}" : path;
+            get => string.IsNullOrEmpty(path) ? $"{IPicaClient.FileServer[IPicaClient.FileChannel - 1]}static/{Path}" : path;
             init => path=value;
         }
     }

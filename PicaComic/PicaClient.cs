@@ -5,46 +5,31 @@ namespace PicaComic
     /// <summary>
     /// 哔咔漫画Http客户端
     /// </summary>
-    public static class PicaClient
+    public class PicaClient:IPicaClient
     {
         #region Fields
 
         /// <summary>
         /// 超时
         /// </summary>
-        private static double Timeout { get; set; } = 3;
+        private double Timeout { get; set; } = 3;
 
         /// <summary>
         /// HttpClient实例
         /// </summary>
-        private static HttpClient _client = new HttpClient(new HttpClientHandler());
+        private HttpClient client = new(new HttpClientHandler());
 
         /// <summary>
         /// 端口
         /// </summary>
-        private static WebProxy _proxy;
+        private WebProxy proxy;
 
         /// <summary>
         /// 登录凭证
         /// </summary>
-        private static string _token = null;
+        private string token;
 
-        /// <summary>
-        /// 分流
-        /// </summary>
-        public static int AppChannel { get; set; } = 3;
-
-        /// <summary>
-        /// 图片分流
-        /// </summary>
-        public static int FileChannel { get; set; } = 3;
-
-        /// <summary>
-        /// 图片分流服务器
-        /// </summary>
-        public static IReadOnlyList<string> FileServer = new List<string>
-            { "https://storage1.picacomic.com/", "https://s2.picacomic.com/", "https://s3.picacomic.com/" };
-
+        
         /// <summary>
         /// 服务器
         /// </summary>
@@ -68,9 +53,11 @@ namespace PicaComic
         /// <summary>
         /// UUID
         /// </summary>
-        private static string _nonce = Guid.NewGuid().ToString().Replace("-", string.Empty);
-
-        static PicaClient()
+        private  readonly string nonce = Guid.NewGuid().ToString().Replace("-", string.Empty);
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        public PicaClient()
         {
             SetTimeout(Timeout);
         }
@@ -85,27 +72,27 @@ namespace PicaComic
         /// <param name="api">api name</param>
         /// <param name="method">http method</param>
         /// <returns></returns>
-        private static Dictionary<string, string> GetHeader(string api, string method)
+        private Dictionary<string, string> GetHeader(string api, string method)
         {
-            string t = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-            Dictionary<string, string> header = new Dictionary<string, string>
+            var t = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+            var header = new Dictionary<string, string>
             {
                 { "image-quality", "original" },
                 { "api-key", ApiKey },
                 { "accept", "application/vnd.picacomic.com.v1+json" },
-                { "app-channel", AppChannel.ToString() },
+                { "app-channel", IPicaClient.AppChannel.ToString() },
                 { "time", t },
                 { "app-version", AppVersion },
-                { "nonce", _nonce },
+                { "nonce", nonce },
                 { "app-uuid", "defaultUuid" },
                 { "app-platform", "android" },
                 { "app-build-version", "45" },
                 { "User-Agent", "okhttp/3.8.1" },
-                { "signature", HmacSHA256(api + t + _nonce + method + ApiKey, SignKey) },
+                { "signature", HmacSha256(api + t + nonce + method + ApiKey, SignKey) },
             };
-            if (_token != null)
+            if (token != null)
             {
-                header.Add("authorization", _token);
+                header.Add("authorization", token);
             }
 
             return header;
@@ -117,16 +104,12 @@ namespace PicaComic
         /// <param name="secret">text need to encrypt</param>
         /// <param name="signKey">signKey</param>
         /// <returns>hex ciphertext</returns>
-        private static string HmacSHA256(string secret, string signKey)
+        private static string HmacSha256(string secret, string signKey)
         {
-            string signRet = string.Empty;
-            using (HMACSHA256 mac = new HMACSHA256(Encoding.UTF8.GetBytes(signKey)))
-            {
-                byte[] hash = mac.ComputeHash(Encoding.UTF8.GetBytes(secret.ToLower()));
-                signRet = System.Convert.ToHexString(hash).ToLower();
-            }
-
-            return signRet;
+            var signRet = string.Empty;
+            using var mac = new HMACSHA256(Encoding.UTF8.GetBytes(signKey));
+            var hash = mac.ComputeHash(Encoding.UTF8.GetBytes(secret.ToLower()));
+            return  System.Convert.ToHexString(hash).ToLower();
         }
 
         /// <summary>
@@ -135,15 +118,13 @@ namespace PicaComic
         /// <param name="method"></param>
         /// <param name="api"></param>
         /// <returns></returns>
-        private static HttpRequestMessage CreateRequestMessage(HttpMethod method, string api)
+        private HttpRequestMessage CreateRequestMessage(HttpMethod method, string api)
         {
-            HttpRequestMessage httpRequestMessage = new HttpRequestMessage(method, BaseUrl + api);
-
-            foreach (KeyValuePair<string, string> header in GetHeader(api, method.ToString()))
+            var httpRequestMessage = new HttpRequestMessage(method, BaseUrl + api);
+            foreach (var header in GetHeader(api, method.ToString()))
             {
                 httpRequestMessage.Headers.Add(header.Key, header.Value);
             }
-
             return httpRequestMessage;
         }
 
@@ -156,14 +137,14 @@ namespace PicaComic
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="TaskCanceledException"></exception>
         /// <returns>所需要的时间(单位ms)</returns>
-        private static async Task<int> HeadAsync(string url)
+        private async Task<int> HeadAsync(string url)
         {
-            var message = $"连接测试[proxy:{(_proxy != null ? _proxy.Address : "null")}]{url}: -> ";
+            var message = $"连接测试[proxy:{(proxy != null ? proxy.Address : "null")}]{url}: -> ";
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Head, url);
                 var now = DateTime.Now;
-                using var response = await _client.SendAsync(request);
+                using var response = await client.SendAsync(request);
                 var ms = (DateTime.Now - now).Milliseconds;
                 Log.Debug("{Message}{Ms}ms", message, ms);
                 return ms;
@@ -182,15 +163,15 @@ namespace PicaComic
         /// <param name="api">Pica API</param>
         /// <exception cref="PicaComicException"></exception>
         /// <returns></returns>
-        private static async Task<T> GetAsync<T>(string api) where T : PicaResponse
+        private async Task<T> GetAsync<T>(string api) where T : PicaResponse
         {
             try
             {
                 using var request = CreateRequestMessage(HttpMethod.Get, api);
-                using var response = await _client.SendAsync(request);
+                using var response = await client.SendAsync(request);
                 var resp = await response.Content.ReadAsStringAsync();
                 Log.Debug("\n[Get]{Api}:\nproxy:{Proxy}\nreturn:{Resp}", api,
-                    _proxy != null ? _proxy.Address : "null", resp);
+                    proxy != null ? proxy.Address : "null", resp);
                 var res = JsonSerializer.Deserialize<T>(resp);
                 if (res.Code != 200)
                 {
@@ -214,23 +195,23 @@ namespace PicaComic
         /// <param name="payload">传递数据</param>
         /// <exception cref="PicaComicException"></exception> 
         /// <returns></returns>
-        private static async Task<T> PostAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
+        private async Task<T> PostAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
         {
             return await PostAsync<T>(api, JsonSerializer.Serialize(payload));
         }
 
-        private static async Task<T> PostAsync<T>(string api, Dictionary<string, string> payload,
+        private async Task<T> PostAsync<T>(string api, Dictionary<string, string> payload,
             JsonSerializerOptions options) where T : PicaResponse
         {
             return await PostAsync<T>(api, JsonSerializer.Serialize(payload, options));
         }
 
-        private static async Task<T> PostAsync<T>(string api) where T : PicaResponse
+        private async Task<T> PostAsync<T>(string api) where T : PicaResponse
         {
             return await PostAsync<T>(api, JsonSerializer.Serialize(new Dictionary<string, string>()));
         }
 
-        private static async Task<T> PostAsync<T>(string api, string data) where T : PicaResponse
+        private async Task<T> PostAsync<T>(string api, string data) where T : PicaResponse
         {
             try
             {
@@ -238,10 +219,10 @@ namespace PicaComic
                 request.Content = new StringContent(data, Encoding.UTF8, "application/json");
                 request.Content.Headers.Remove("Content-Type");
                 request.Content.Headers.Add("Content-Type", "application/json; charset=UTF-8");
-                using var response = await _client.SendAsync(request);
+                using var response = await client.SendAsync(request);
                 var resp = await response.Content.ReadAsStringAsync();
                 Log.Debug("\n[Post]{Api}:\nproxy:{Proxy}\npayload:{Data}\nreturn:{Resp}", api,
-                    _proxy != null ? _proxy.Address : "null", data, resp);
+                    proxy != null ? proxy.Address : "null", data, resp);
                 var res = JsonSerializer.Deserialize<T>(resp);
                 if (res.Code != 200)
                 {
@@ -264,7 +245,7 @@ namespace PicaComic
         /// <param name="payload">传递数据</param>
         /// <exception cref="PicaComicException"></exception>
         /// <returns></returns>
-        private static async Task<T> PutAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
+        private async Task<T> PutAsync<T>(string api, Dictionary<string, string> payload) where T : PicaResponse
         {
             try
             {
@@ -273,10 +254,10 @@ namespace PicaComic
                 request.Content = new StringContent(data, Encoding.UTF8, "application/json");
                 request.Content.Headers.Remove("Content-Type");
                 request.Content.Headers.Add("Content-Type", "application/json; charset=UTF-8");
-                using var response = await _client.SendAsync(request);
+                using var response = await client.SendAsync(request);
                 var resp = await response.Content.ReadAsStringAsync();
                 Log.Debug("\n[Put]{Api}:\nproxy:{Proxy}\npayload:{Data}\nreturn:{Resp}", api,
-                    _proxy != null ? _proxy.Address : "null", data, resp);
+                    proxy != null ? proxy.Address : "null", data, resp);
                 var res = JsonSerializer.Deserialize<T>(resp);
                 if (res.Code != 200)
                 {
@@ -296,53 +277,52 @@ namespace PicaComic
         /// <summary>
         /// 设置登录凭证
         /// </summary>
-        /// <param name="token">登录凭证</param>
-        public static void SetToken(string token)
+        /// <param name="t">登录凭证</param>
+        public void SetToken(string t)
         {
-            _token = token;
+            token = t;
         }
 
         /// <summary>
         /// 是否存在登录凭证
         /// </summary>
-        public static bool HasToken => !string.IsNullOrEmpty(_token);
+        public bool HasToken => !string.IsNullOrEmpty(token);
 
         /// <summary>
         /// 重置代理
         /// </summary>
-        public static void ResetProxy()
+        public void ResetProxy()
         {
-            _client = new HttpClient(handler: new HttpClientHandler());
+            client = new HttpClient(handler: new HttpClientHandler());
         }
 
         /// <summary>
         /// 设置超时时间
         /// </summary>
-        public static void SetTimeout(double timeout)
+        public void SetTimeout(double timeout)
         {
             Timeout = timeout;
-            _client.Timeout = TimeSpan.FromSeconds(timeout);
+            client.Timeout = TimeSpan.FromSeconds(timeout);
         }
 
         /// <summary>
         /// 设置代理,仅支持'http', 'socks4', 'socks4a', 'socks5'
         /// </summary>
-        /// <param name="proxy">Proxy Address</param>
-        public static void SetProxy(Uri proxy)
+        /// <param name="p">Proxy Address</param>
+        public void SetProxy(Uri p)
         {
-            _proxy = new WebProxy
+            proxy = new WebProxy
             {
-                Address = proxy,
+                Address = p,
                 BypassProxyOnLocal = false,
                 UseDefaultCredentials = false,
             };
-            HttpClientHandler innerHandler = new HttpClientHandler
+            var innerHandler = new HttpClientHandler
             {
-                Proxy = _proxy,
+                Proxy = proxy,
                 UseProxy = true
             };
-
-            _client = new HttpClient(innerHandler);
+            client = new HttpClient(innerHandler);
             SetTimeout(Timeout);
         }
 
@@ -350,7 +330,7 @@ namespace PicaComic
         /// 连接测试
         /// </summary>
         /// <returns>所需要的时间(单位ms)</returns>
-        public static async Task<int> PingBaseUrl()
+        public async Task<int> PingBaseUrl()
         {
             return await HeadAsync(BaseUrl);
         }
@@ -360,7 +340,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="url">The URL.</param>
         /// <returns>所需要的时间(单位ms)</returns>
-        public static async Task<int> Ping(string url)
+        public async Task<int> Ping(string url)
         {
             return await HeadAsync(url);
         }
@@ -372,9 +352,9 @@ namespace PicaComic
         /// <param name="password"></param>
         /// <exception cref="PicaComicException"></exception> 
         /// <returns></returns>
-        public static async Task<SignInResponse> SignIn(string email, string password)
+        public async Task<SignInResponse> SignIn(string email, string password)
         {
-            SignInResponse res = await PostAsync<SignInResponse>("auth/sign-in",
+            var res = await PostAsync<SignInResponse>("auth/sign-in",
                 new Dictionary<string, string>
                 {
                     { "email", email },
@@ -382,7 +362,7 @@ namespace PicaComic
                 });
             if (res.Data != null)
             {
-                _token = res.Data.Token;
+                token = res.Data.Token;
             }
 
             return res;
@@ -394,7 +374,7 @@ namespace PicaComic
         /// <param name="id"></param>
         /// <exception cref="PicaComicException"></exception> 
         /// <returns></returns>
-        public static async Task<ProfileResponse> Profile(string id = null)
+        public async Task<ProfileResponse> Profile(string id = null)
         {
             return await GetAsync<ProfileResponse>($"users/{(id is null ? "" : id + "/")}profile");
         }
@@ -403,7 +383,7 @@ namespace PicaComic
         /// 大家都在搜 接口
         /// </summary>
         /// <returns></returns>
-        public static async Task<KeywordsResponse> Keywords()
+        public async Task<KeywordsResponse> Keywords()
         {
             return await GetAsync<KeywordsResponse>("keywords");
         }
@@ -413,7 +393,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="comicId">The book identifier.</param>
         /// <returns></returns>
-        public static async Task<ComicRandomResponse> Recommendation(string comicId)
+        public async Task<ComicRandomResponse> Recommendation(string comicId)
         {
             return await GetAsync<ComicRandomResponse>($"comics/{comicId}/recommendation");
         }
@@ -421,7 +401,7 @@ namespace PicaComic
         /// <summary>
         /// 获取所有分区 接口
         /// </summary>
-        public static async Task<CategoriesResponse> Categories()
+        public async Task<CategoriesResponse> Categories()
         {
             return await GetAsync<CategoriesResponse>("categories");
         }
@@ -432,7 +412,7 @@ namespace PicaComic
         /// <param name="category">分区名称<see cref="Category.Title"/></param>
         /// <param name="page">第几页</param>
         /// <param name="s">default: <see cref="SortRule.dd"/></param>
-        public static async Task<CategoryResponse> Category(string category, int page = 1, SortRule s = SortRule.dd)
+        public async Task<CategoryResponse> Category(string category, int page = 1, SortRule s = SortRule.dd)
         {
             if (category == "最近更新") category = "";
             var c = string.IsNullOrEmpty(category) ? "" : $"&c={HttpUtility.UrlEncode(category)}";
@@ -442,7 +422,7 @@ namespace PicaComic
         /// <summary>
         /// 随机本子接口
         /// </summary>
-        public static async Task<ComicRandomResponse> ComicRandom()
+        public async Task<ComicRandomResponse> ComicRandom()
         {
             return await GetAsync<ComicRandomResponse>($"comics/random");
         }
@@ -451,7 +431,7 @@ namespace PicaComic
         /// 神魔推荐
         /// </summary>
         /// <returns></returns>
-        public static async Task<CollectionsResponse> ComicCollections()
+        public async Task<CollectionsResponse> ComicCollections()
         {
             return await GetAsync<CollectionsResponse>($"collections");
         }
@@ -461,7 +441,7 @@ namespace PicaComic
         /// </summary> 
         /// <param name="comicId">漫画ID<see cref="Comic.Id"/></param>
         /// <returns></returns>
-        public static async Task<ComicInfoResponse> ComicInfo(string comicId)
+        public async Task<ComicInfoResponse> ComicInfo(string comicId)
         {
             return await GetAsync<ComicInfoResponse>($"comics/{comicId}");
         }
@@ -472,7 +452,7 @@ namespace PicaComic
         /// <param name="comicId">漫画ID<see cref="Comic.Id"/></param>
         /// <param name="page">第几页</param>
         /// <returns></returns>
-        public static async Task<EpisodeResponse> Episodes(string comicId, int page)
+        public async Task<EpisodeResponse> Episodes(string comicId, int page)
         {
             return await GetAsync<EpisodeResponse>($"comics/{comicId}/eps?page={page}");
         }
@@ -484,7 +464,7 @@ namespace PicaComic
         /// <param name="epsId">话Order<see cref="Episode.Order"/></param>
         /// <param name="page">第几页</param>
         /// <returns></returns>
-        public static async Task<PictureResponse> Pictures(string comicId, int epsId, int page)
+        public async Task<PictureResponse> Pictures(string comicId, int epsId, int page)
         {
             return await GetAsync<PictureResponse>($"comics/{comicId}/order/{epsId}/pages?page={page}");
         }
@@ -495,7 +475,7 @@ namespace PicaComic
         /// <param name="comicId">漫画ID</param>
         /// <param name="page">第几页</param>
         /// <returns></returns>
-        public static async Task<CommentResponse> ComicComments(string comicId, int page)
+        public async Task<CommentResponse> ComicComments(string comicId, int page)
         {
             return await GetAsync<CommentResponse>($"comics/{comicId}/comments?page={page}");
         }
@@ -505,7 +485,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="page">第几页</param>
         /// <returns></returns>
-        public static async Task<CommentResponse> ProfileComments(int page)
+        public async Task<CommentResponse> ProfileComments(int page)
         {
             return await GetAsync<CommentResponse>($"users/my-comments?page={page}");
         }
@@ -516,7 +496,7 @@ namespace PicaComic
         /// <param name="newPassword">新密码</param>
         /// <param name="oldPassword">旧密码</param>
         /// <returns></returns>
-        public static async Task<PicaResponse> ChangePassword(string newPassword, string oldPassword)
+        public async Task<PicaResponse> ChangePassword(string newPassword, string oldPassword)
         {
             return await PutAsync<PicaResponse>("users/password", new Dictionary<string, string>
             {
@@ -530,7 +510,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="imgData">base64图片</param>
         /// <returns></returns>
-        public static async Task<PicaResponse> SetAvatar(string imgData)
+        public async Task<PicaResponse> SetAvatar(string imgData)
         {
             return await PutAsync<PicaResponse>("users/avatar", new Dictionary<string, string>
             {
@@ -543,12 +523,12 @@ namespace PicaComic
         /// </summary>
         /// <param name="img">图片</param>
         /// <returns></returns>
-        public static async Task<PicaResponse> SetAvatar(StorageFile img)
+        public async Task<PicaResponse> SetAvatar(StorageFile img)
         {
-            Stream stream = await img.OpenStreamForReadAsync();
-            byte[] bytes = new byte[(int)stream.Length];
+            var stream = await img.OpenStreamForReadAsync();
+            var bytes = new byte[(int)stream.Length];
             stream.Read(bytes, 0, (int)stream.Length);
-            string imgData = "data:image/" + img.FileType.Remove(0, 1) + ";base64," + Convert.ToBase64String(bytes);
+            var imgData = "data:image/" + img.FileType.Remove(0, 1) + ";base64," + Convert.ToBase64String(bytes);
             return await SetAvatar(imgData);
         }
 
@@ -556,7 +536,7 @@ namespace PicaComic
         /// 签到 接口
         /// </summary>
         /// <returns></returns>
-        public static async Task<PunchInResponse> PunchIn()
+        public async Task<PunchInResponse> PunchIn()
         {
             return await PostAsync<PunchInResponse>("users/punch-in");
         }
@@ -567,7 +547,7 @@ namespace PicaComic
         /// <param name="page">第几页</param>
         /// <param name="s">排序<see cref="SortRule"/></param>
         /// <returns></returns>
-        public static async Task<CategoryResponse> ProfileFavourites(int page, SortRule s = SortRule.dd)
+        public async Task<CategoryResponse> ProfileFavourites(int page, SortRule s = SortRule.dd)
         {
             return await GetAsync<CategoryResponse>($"users/favourite?s={s}&page={page}");
         }
@@ -577,7 +557,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="comicId">漫画ID</param>
         /// <returns></returns>
-        public static async Task<ActionResponse> ComicFavourite(string comicId)
+        public async Task<ActionResponse> ComicFavourite(string comicId)
         {
             return await PostAsync<ActionResponse>($"comics/{comicId}/favourite");
         }
@@ -587,7 +567,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="comicId">漫画ID</param>
         /// <returns></returns>
-        public static async Task<ActionResponse> ComicLike(string comicId)
+        public async Task<ActionResponse> ComicLike(string comicId)
         {
             return await PostAsync<ActionResponse>($"comics/{comicId}/like");
         }
@@ -600,16 +580,16 @@ namespace PicaComic
         /// <param name="page">第几页</param>
         /// <param name="s">排序<see cref="SortRule"/></param>
         /// <returns></returns>
-        public static async Task<SearchResultResponse> AdvancedSearch(string keyword, int page,
+        public async Task<SearchResultResponse> AdvancedSearch(string keyword, int page,
             SortRule s = SortRule.dd, List<string> categories = null)
         {
-            SearchData data = new SearchData
+            var data = new SearchData
             {
                 Sort = s.ToString(),
                 Keyword = keyword,
                 Categories = categories,
             };
-            JsonSerializerOptions options = new JsonSerializerOptions()
+            var options = new JsonSerializerOptions()
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
@@ -624,7 +604,7 @@ namespace PicaComic
         /// <param name="commentId">评论ID</param>
         /// <param name="page">第几页</param>
         /// <returns></returns>
-        public static async Task<CommentResponse> CommentChildren(string commentId, int page)
+        public async Task<CommentResponse> CommentChildren(string commentId, int page)
         {
             return await GetAsync<CommentResponse>($"comments/{commentId}/childrens?page={page}");
         }
@@ -634,7 +614,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="commentId">评论ID</param>
         /// <returns></returns>
-        public static async Task<ActionResponse> CommentLike(string commentId)
+        public async Task<ActionResponse> CommentLike(string commentId)
         {
             return await PostAsync<ActionResponse>($"comments/{commentId}/like");
         }
@@ -645,7 +625,7 @@ namespace PicaComic
         /// <param name="comicId">漫画ID</param>
         /// <param name="message">评论</param>
         /// <returns></returns>
-        public static async Task<PicaResponse> SendComicComment(string comicId, string message)
+        public async Task<PicaResponse> SendComicComment(string comicId, string message)
         {
             return await PostAsync<PicaResponse>($"comics/{comicId}/comments",
                 new Dictionary<string, string>
@@ -663,7 +643,7 @@ namespace PicaComic
         /// <param name="commentId">评论ID</param>
         /// <param name="message">评论</param>
         /// <returns></returns>
-        public static async Task<PicaResponse> SendCommentChildren(string commentId, string message)
+        public async Task<PicaResponse> SendCommentChildren(string commentId, string message)
         {
             return await PostAsync<PicaResponse>($"comments/{commentId}",
                 new Dictionary<string, string>
@@ -680,7 +660,7 @@ namespace PicaComic
         /// 骑士榜
         /// </summary>
         /// <returns></returns>
-        public static async Task<KnightsResponse> KnightLeaderboard()
+        public async Task<KnightsResponse> KnightLeaderboard()
         {
             return await GetAsync<KnightsResponse>("comics/knight-leaderboard");
         }
@@ -690,7 +670,7 @@ namespace PicaComic
         /// </summary>
         /// <param name="tt"><see cref="LeaderboardTime"/>时间区间</param>
         /// <returns></returns>
-        public static async Task<LeaderBoardResponse> Leaderboard(LeaderboardTime tt = LeaderboardTime.H24)
+        public async Task<LeaderBoardResponse> Leaderboard(LeaderboardTime tt = LeaderboardTime.H24)
         {
             return await GetAsync<LeaderBoardResponse>($"comics/leaderboard?tt={tt}&ct=VC");
         }
