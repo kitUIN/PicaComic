@@ -5,41 +5,41 @@ namespace PicaComic.Models
     /// <summary>
     /// 评论
     /// </summary>
-    public partial class Comment:ObservableObject
+    public partial class Comment: ObservableObject
     {
-        [JsonPropertyName("_id")]
-        public string Id { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("_id")]
+        private string id ;
 
-        [JsonPropertyName("content")]
-        public string Content { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("content")]
+        private string content ;
 
-        [JsonPropertyName("_user")]
-        public Commenter User { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("_user")]
+        private Commenter user ;
 
-        [JsonPropertyName("_comic")]
-        public string Comic { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("_comic")]
+        private string comic ;
 
-        [JsonPropertyName("totalComments")]
-        public int TotalComments { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("totalComments")]
+        private int totalComments ;
 
-        [JsonPropertyName("isTop")]
-        public bool IsTop { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("isTop")]
+        private bool isTop ;
 
-        [JsonPropertyName("hide")]
-        public bool Hide { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("hide")]
+        private bool hide ;
 
-        [JsonPropertyName("created_at")]
-        public DateTime CreatedAt { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("created_at")]
+        private DateTime createdAt ;
 
-        [JsonPropertyName("likesCount")]
-        public int LikesCount { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("likesCount")]
+        private int likesCount ;
 
-        [JsonPropertyName("commentsCount")]
-        public int CommentsCount { get; set; }
+        [ObservableProperty] [property: JsonPropertyName("commentsCount")]
+        private int commentsCount ;
 
-        [JsonPropertyName("isLiked")]
-        public bool IsLiked { get; set; }
-        [ObservableProperty]
+        [ObservableProperty] [property: JsonPropertyName("isLiked")]
+        private bool isLiked ;
+        [ObservableProperty] [property: JsonIgnore]
         private int order;
     }
 

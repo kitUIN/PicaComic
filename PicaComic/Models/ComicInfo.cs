@@ -60,7 +60,8 @@ public partial class ComicInfo : Comic
     /// <summary>
     /// 标签
     /// </summary>
-    [ObservableProperty][property: JsonPropertyName("tags")] private ObservableCollection<string> tags;
+    [JsonPropertyName("tags")] 
+    public List<string> Tags { get; set; }
 
     /// <summary>
     /// 更新时间
