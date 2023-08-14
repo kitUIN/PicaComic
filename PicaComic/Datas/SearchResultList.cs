@@ -3,6 +3,6 @@
     public class SearchResultList : ComicList
     {
         [JsonPropertyName("docs")]
-        public List<SearchResultComic> Docs { get; set; }
+        public List<CategoryComic> Docs { get; set; }
     }
 }

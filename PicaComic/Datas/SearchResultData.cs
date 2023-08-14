@@ -2,7 +2,7 @@
 {
     public class SearchResultData
     {
-        [JsonPropertyName("data")]
-        public SearchResultList Data { get; set; }
+        [JsonPropertyName("comics")]
+        public SearchResultList Comics { get; set; }
     }
 }
